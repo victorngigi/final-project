@@ -1,42 +1,74 @@
+/* Use Google Font Poppins */
 body {
-  font-family: Arial, sans-serif;
-  margin: 20px;
-  padding: 0 20px;
-  background: #f9f9f9;
+  margin: 0;
+  font-family: 'Poppins', sans-serif;
+  background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+  color: #333;
 }
 
+/* Container to center content */
+.container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Headings */
 h1 {
   text-align: center;
+  margin-bottom: 30px;
+  font-weight: 600;
 }
 
+/* Form styling */
 .form-container {
-  background: #fff;
-  padding: 20px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  max-width: 600px;
-  margin: 0 auto 20px auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 30px;
 }
 
-label, select, button {
-  font-size: 16px;
-  margin: 5px;
-}
-
-/* Styling for the championship toggle buttons */
-#championToggle {
+.field-group {
+  width: 100%;
+  max-width: 400px;
   margin: 10px 0;
+  text-align: left;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+select, button {
+  width: 100%;
+  padding: 10px;
+  font-size: 16px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  transition: all 0.3s ease;
+}
+
+/* Champion toggle buttons */
+#championToggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
 }
 
 .champ-btn {
-  padding: 8px 16px;
-  border: none;
-  border-radius: 4px;
-  background: #ddd;
-  cursor: pointer;
+  width: 48%;
+  padding: 10px;
   font-size: 16px;
-  margin-right: 10px;
-  transition: background 0.3s, color 0.3s;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  background: #ddd;
+  transition: background 0.3s ease, color 0.3s ease;
 }
 
 .champ-btn:hover {
@@ -45,11 +77,25 @@ label, select, button {
 
 .champ-btn.active {
   background: #007bff;
-  color: white;
+  color: #fff;
 }
 
+/* Action button styling */
+.action-btn {
+  background: #28a745;
+  color: #fff;
+  border: none;
+  margin-top: 20px;
+  cursor: pointer;
+}
+.action-btn:hover {
+  background: #218838;
+}
+
+/* Chart styling */
 canvas {
-  border: 1px solid #ccc;
   display: block;
-  margin: 20px auto;
+  margin: 0 auto;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
