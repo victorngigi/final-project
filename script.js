@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const submitBtn = document.getElementById("submitBtn");
   const chartCanvas = document.getElementById("f1Chart").getContext("2d");
   let f1Chart = null;
-
+  
   // Default championship type is "drivers"
   let selectedChampType = "drivers";
 
@@ -40,13 +40,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Event listeners for toggle buttons
-  driversBtn.addEventListener("click", () => {
-    setChampType("drivers");
-  });
-  constructorsBtn.addEventListener("click", () => {
-    setChampType("constructors");
-  });
+  driversBtn.addEventListener("click", () => setChampType("drivers"));
+  constructorsBtn.addEventListener("click", () => setChampType("constructors"));
 
   // Async function to fetch drivers for a given season
   async function fetchDrivers(season) {
@@ -109,7 +104,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const seasonResponse = await fetch(`https://ergast.com/api/f1/${season}.json`);
       const seasonData = await seasonResponse.json();
       const races = seasonData.MRData.RaceTable.Races;
-      // Use race names for x-axis labels
       const raceLabels = races.map((race) => race.raceName);
 
       // For each race, fetch standings to get points for the selected entity
@@ -157,6 +151,8 @@ document.addEventListener("DOMContentLoaded", () => {
           }],
         },
         options: {
+          responsive: true,
+          maintainAspectRatio: false,
           scales: {
             y: { beginAtZero: true },
           },

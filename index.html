@@ -3,10 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>F1 Historical Data</title>
-  <!-- Google Fonts -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
   <div class="container">
@@ -16,12 +13,9 @@
         <label for="seasonSelect">Select Season:</label>
         <select id="seasonSelect"></select>
       </div>
-      <div class="field-group">
-        <!-- Championship Type Toggle -->
-        <div id="championToggle">
-          <button id="driversBtn" class="champ-btn active">Drivers</button>
-          <button id="constructorsBtn" class="champ-btn">Constructors</button>
-        </div>
+      <div class="field-group" id="championToggle">
+        <button id="driversBtn" class="champ-btn active">Drivers</button>
+        <button id="constructorsBtn" class="champ-btn">Constructors</button>
       </div>
       <div class="field-group" id="driversSection">
         <label for="driverSelect">Select Driver:</label>
@@ -32,12 +26,12 @@
         <select id="constructorSelect"></select>
       </div>
       <div class="field-group">
-        <button id="submitBtn" class="action-btn">Submit</button>
+        <button id="submitBtn">Submit</button>
       </div>
     </div>
-    <canvas id="f1Chart" width="800" height="400"></canvas>
+    <canvas id="f1Chart"></canvas>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="./script.js"></script>
+  <script src="script.js"></script>
 </body>
 </html>
