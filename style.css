@@ -108,7 +108,6 @@ button:hover {
   background-color: #fff;
 }
 
-/* Ensure the canvas fills the container */
 .chart-container canvas {
   width: 100%;
   height: 100%;

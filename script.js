@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedChampType = "drivers";
 
   // Populate season dropdown (from 1990 to 2024)
-  const startYear = 1990;
+  const startYear = 1950;
   const endYear = 2024;
   for (let year = startYear; year <= endYear; year++) {
     const option = document.createElement("option");
