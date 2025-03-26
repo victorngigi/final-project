@@ -2,12 +2,18 @@ document.addEventListener("DOMContentLoaded", () => {
   const seasonSelect = document.getElementById("seasonSelect");
   const driverSelect = document.getElementById("driverSelect");
   const constructorSelect = document.getElementById("constructorSelect");
-  const champTypeRadios = document.getElementsByName("champType");
+  const driversSection = document.getElementById("driversSection");
+  const constructorsSection = document.getElementById("constructorsSection");
+  const driversBtn = document.getElementById("driversBtn");
+  const constructorsBtn = document.getElementById("constructorsBtn");
   const submitBtn = document.getElementById("submitBtn");
   const chartCanvas = document.getElementById("f1Chart").getContext("2d");
   let f1Chart = null;
 
-  // Populate season dropdown
+  // Default championship type is "drivers"
+  let selectedChampType = "drivers";
+
+  // Populate season dropdown (from 1990 to 2024)
   const startYear = 1990;
   const endYear = 2024;
   for (let year = startYear; year <= endYear; year++) {
@@ -18,27 +24,45 @@ document.addEventListener("DOMContentLoaded", () => {
   }
   seasonSelect.value = endYear; // default to latest season available
 
+  // Toggle championship type buttons styling and selection
+  function setChampType(type) {
+    selectedChampType = type;
+    if (type === "drivers") {
+      driversBtn.classList.add("active");
+      constructorsBtn.classList.remove("active");
+      driversSection.style.display = "block";
+      constructorsSection.style.display = "none";
+    } else {
+      constructorsBtn.classList.add("active");
+      driversBtn.classList.remove("active");
+      driversSection.style.display = "none";
+      constructorsSection.style.display = "block";
+    }
+  }
+
+  // Event listeners for toggle buttons
+  driversBtn.addEventListener("click", () => {
+    setChampType("drivers");
+  });
+  constructorsBtn.addEventListener("click", () => {
+    setChampType("constructors");
+  });
+
   // Async function to fetch drivers for a given season
   async function fetchDrivers(season) {
     driverSelect.innerHTML = ""; // clear existing options
-    // try-catch block to handle errors
     try {
-      const response = await fetch(
-        `https://ergast.com/api/f1/${season}/drivers.json`
-      );
+      const response = await fetch(`https://ergast.com/api/f1/${season}/drivers.json`);
       const data = await response.json();
       const drivers = data.MRData.DriverTable.Drivers;
-
-      // Create driver dropdown and populate it with fetched data
       drivers.forEach((driver) => {
         const option = document.createElement("option");
         option.value = driver.driverId;
         option.textContent = `${driver.givenName} ${driver.familyName}`;
         driverSelect.appendChild(option);
       });
-
       // Default to Hamilton if available in the season
-      if (drivers.some((driver) => driver.driverId === "hamilton")) {
+      if (drivers.some(driver => driver.driverId === "hamilton")) {
         driverSelect.value = "hamilton";
       }
     } catch (error) {
@@ -49,15 +73,10 @@ document.addEventListener("DOMContentLoaded", () => {
   // Async function to fetch constructors for a given season
   async function fetchConstructors(season) {
     constructorSelect.innerHTML = ""; // clear existing options
-    // try-catch block to handle errors
     try {
-      const response = await fetch(
-        `https://ergast.com/api/f1/${season}/constructors.json`
-      );
+      const response = await fetch(`https://ergast.com/api/f1/${season}/constructors.json`);
       const data = await response.json();
       const constructors = data.MRData.ConstructorTable.Constructors;
-
-      // Create constructor dropdown and populate it with fetched data
       constructors.forEach((constructor) => {
         const option = document.createElement("option");
         option.value = constructor.constructorId;
@@ -74,75 +93,49 @@ document.addEventListener("DOMContentLoaded", () => {
     fetchDrivers(seasonSelect.value);
     fetchConstructors(seasonSelect.value);
   }
-
-  // Fetch initial data for latest season
-  updateDataForSeason();
-
-  // Event listener for season change
   seasonSelect.addEventListener("change", updateDataForSeason);
-
-  // Toggle between drivers and constructors section
-  champTypeRadios.forEach((radio) => {
-    radio.addEventListener("change", () => {
-      if (radio.value === "drivers") {
-        driverSelect.parentElement.style.display = "block";
-        constructorSelect.parentElement.style.display = "none";
-      } else {
-        driverSelect.parentElement.style.display = "none";
-        constructorSelect.parentElement.style.display = "block";
-      }
-    });
-  });
+  updateDataForSeason();
 
   // Event listener for submit button
   submitBtn.addEventListener("click", async () => {
     const season = seasonSelect.value;
-    const selectedChampType = document.querySelector("input[name='champType']:checked").value;
-    const selectedEntity =
-      selectedChampType === "drivers"
-        ? driverSelect.value
-        : constructorSelect.value;
-
-    // try-catch block to handle errors
+    // Determine selected entity based on championship type
+    const selectedEntity = selectedChampType === "drivers" 
+                             ? driverSelect.value 
+                             : constructorSelect.value;
+    
     try {
-      // Fetch season data to get all race names for each round
+      // Fetch season data to get all race names
       const seasonResponse = await fetch(`https://ergast.com/api/f1/${season}.json`);
       const seasonData = await seasonResponse.json();
       const races = seasonData.MRData.RaceTable.Races;
-
       // Use race names for x-axis labels
       const raceLabels = races.map((race) => race.raceName);
 
-      // For each race, fetch standings (drivers or constructors)
+      // For each race, fetch standings to get points for the selected entity
       const pointsData = await Promise.all(
         races.map(async (race) => {
           const round = race.round;
           let url;
-          // manipulate DOM to show either drivers or constructors dropdown
           if (selectedChampType === "drivers") {
             url = `https://ergast.com/api/f1/${season}/${round}/driverStandings.json`;
           } else {
             url = `https://ergast.com/api/f1/${season}/${round}/constructorStandings.json`;
           }
-
           const response = await fetch(url);
           const data = await response.json();
-          const standingsList = data.MRData.StandingsTable.StandingsLists;
-
-          if (standingsList.length > 0) {
+          const standings = data.MRData.StandingsTable.StandingsLists;
+          if (standings.length > 0) {
             if (selectedChampType === "drivers") {
-              const driverStandings = standingsList[0].DriverStandings.find(
+              const driverStandings = standings[0].DriverStandings.find(
                 (ds) => ds.Driver.driverId === selectedEntity
               );
               return driverStandings ? parseFloat(driverStandings.points) : 0;
             } else {
-              const constructorStandings =
-                standingsList[0].ConstructorStandings.find(
-                  (cs) => cs.Constructor.constructorId === selectedEntity
-                );
-              return constructorStandings
-                ? parseFloat(constructorStandings.points)
-                : 0;
+              const constructorStandings = standings[0].ConstructorStandings.find(
+                (cs) => cs.Constructor.constructorId === selectedEntity
+              );
+              return constructorStandings ? parseFloat(constructorStandings.points) : 0;
             }
           }
           return 0;
@@ -155,15 +148,13 @@ document.addEventListener("DOMContentLoaded", () => {
         type: "line",
         data: {
           labels: raceLabels,
-          datasets: [
-            {
-              label: `Points for ${selectedEntity} in ${season}`,
-              data: pointsData,
-              borderColor: selectedChampType === "drivers" ? "blue" : "red",
-              fill: false,
-              tension: 0.1,
-            },
-          ],
+          datasets: [{
+            label: `Points for ${selectedEntity} in ${season}`,
+            data: pointsData,
+            borderColor: selectedChampType === "drivers" ? "blue" : "red",
+            fill: false,
+            tension: 0.1,
+          }],
         },
         options: {
           scales: {

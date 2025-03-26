@@ -12,24 +12,23 @@
     <select id="seasonSelect"></select>
     <br>
     
-    <label>
-      <input type="radio" name="champType" value="drivers" checked> Drivers
-    </label>
-    <label>
-      <input type="radio" name="champType" value="constructors"> Constructors
-    </label>
+    <!-- Toggle buttons for Championship Type -->
+    <div id="championToggle">
+      <button id="driversBtn" class="champ-btn active">Drivers</button>
+      <button id="constructorsBtn" class="champ-btn">Constructors</button>
+    </div>
     <br>
-
+    
+    <!-- Sections for driver or constructor selection -->
     <div id="driversSection">
       <label for="driverSelect">Select Driver:</label>
       <select id="driverSelect"></select>
     </div>
-
     <div id="constructorsSection" style="display: none;">
       <label for="constructorSelect">Select Constructor:</label>
       <select id="constructorSelect"></select>
     </div>
-
+    
     <button id="submitBtn">Submit</button>
   </div>
 

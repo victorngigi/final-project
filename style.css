@@ -1,17 +1,55 @@
 body {
   font-family: Arial, sans-serif;
   margin: 20px;
+  padding: 0 20px;
+  background: #f9f9f9;
+}
+
+h1 {
+  text-align: center;
 }
 
 .form-container {
-  margin-bottom: 20px;
-}
-
-canvas {
-  border: 1px solid #ccc;
+  background: #fff;
+  padding: 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  max-width: 600px;
+  margin: 0 auto 20px auto;
 }
 
 label, select, button {
   font-size: 16px;
   margin: 5px;
+}
+
+/* Styling for the championship toggle buttons */
+#championToggle {
+  margin: 10px 0;
+}
+
+.champ-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  background: #ddd;
+  cursor: pointer;
+  font-size: 16px;
+  margin-right: 10px;
+  transition: background 0.3s, color 0.3s;
+}
+
+.champ-btn:hover {
+  background: #ccc;
+}
+
+.champ-btn.active {
+  background: #007bff;
+  color: white;
+}
+
+canvas {
+  border: 1px solid #ccc;
+  display: block;
+  margin: 20px auto;
 }
