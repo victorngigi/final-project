@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Simple F1 Historical Project</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <h1>Simple F1 Historical Project</h1>
+  <div class="form-container">
+    <label for="seasonSelect">Select Season:</label>
+    <select id="seasonSelect"></select>
+    <br>
+    <label>
+      <input type="radio" name="champType" value="drivers" checked> Drivers
+    </label>
+    <label>
+      <input type="radio" name="champType" value="constructors"> Constructors
+    </label>
+    <br>
+    <button id="submitBtn">Submit</button>
+  </div>
+  <canvas id="f1Chart" width="800" height="400"></canvas>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>
