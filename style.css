@@ -10,3 +10,8 @@ body {
 canvas {
   border: 1px solid #ccc;
 }
+
+label, select, button {
+  font-size: 16px;
+  margin: 5px;
+}
