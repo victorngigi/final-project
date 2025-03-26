@@ -2,15 +2,16 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Simple F1 Historical Project</title>
+  <title>F1 Historical Data</title>
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Simple F1 Historical Project</h1>
+  <h1>F1 Historical Data</h1>
   <div class="form-container">
     <label for="seasonSelect">Select Season:</label>
     <select id="seasonSelect"></select>
     <br>
+    
     <label>
       <input type="radio" name="champType" value="drivers" checked> Drivers
     </label>
@@ -18,12 +19,22 @@
       <input type="radio" name="champType" value="constructors"> Constructors
     </label>
     <br>
-    <label for="driverSelect">Select Driver:</label>
-    <select id="driverSelect"></select>
-    <br>
+
+    <div id="driversSection">
+      <label for="driverSelect">Select Driver:</label>
+      <select id="driverSelect"></select>
+    </div>
+
+    <div id="constructorsSection" style="display: none;">
+      <label for="constructorSelect">Select Constructor:</label>
+      <select id="constructorSelect"></select>
+    </div>
+
     <button id="submitBtn">Submit</button>
   </div>
+
   <canvas id="f1Chart" width="800" height="400"></canvas>
+
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="script.js"></script>
 </body>
