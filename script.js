@@ -152,7 +152,6 @@ document.addEventListener("DOMContentLoaded", () => {
         },
         options: {
           responsive: true,
-          maintainAspectRatio: false,
           scales: {
             y: { beginAtZero: true },
           },
