@@ -41,9 +41,14 @@ document.addEventListener("DOMContentLoaded", () => {
       (year) => year <= 2024
     );
     createCarousel(seasonCarousel, years, (year) => {
-      updateDataForSeason(); 
+      updateDataForSeason();
     });
+    const firstYearButton = seasonCarousel.querySelector(".carousel-item");
+    if (firstYearButton) {
+        firstYearButton.click();
+    }
   });
+
   // Auto-select latest decade and season by default:
   createCarousel(
     seasonCarousel,
@@ -59,7 +64,14 @@ document.addEventListener("DOMContentLoaded", () => {
   if (seasonItems.length > 0 && !seasonCarousel.querySelector(".carousel-item.active")) {
     seasonItems[seasonItems.length - 1].classList.add("active");
   }
-  
+
+  const defaultDecadeValue = 2020;
+  const defaultDecadeBtn = [...decadeCarousel.querySelectorAll('.carousel-item')].find(btn => btn.textContent === String(defaultDecadeValue));
+  if (defaultDecadeBtn && !decadeCarousel.querySelector('.carousel-item.active')) {
+       [...decadeCarousel.children].forEach(child => child.classList.remove('active'));
+       defaultDecadeBtn.classList.add('active');
+  }
+
   // Toggle championship type buttons styling and selection
   function setChampType(type) {
     selectedChampType = type;
@@ -81,13 +93,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Async function to fetch drivers for a given season
   async function fetchDrivers(season) {
-    driverSelect.innerHTML = ""; // clear existing options
+    driverSelect.innerHTML = ''; // clear existing options
     try {
       const response = await fetch(
         `https://ergast.com/api/f1/${season}/drivers.json`
       );
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
-      const drivers = data.MRData.DriverTable.Drivers;
+      const drivers = data?.MRData?.DriverTable?.Drivers;
+
+      if (!drivers || drivers.length === 0) {
+         driverSelect.innerHTML = '<option value="">No drivers found</option>';
+         return;
+      }
+
       drivers.forEach((driver) => {
         const option = document.createElement("option");
         option.value = driver.driverId;
@@ -97,45 +116,68 @@ document.addEventListener("DOMContentLoaded", () => {
       // Default to Hamilton if available in the season
       if (drivers.some((driver) => driver.driverId === "hamilton")) {
         driverSelect.value = "hamilton";
+      } else if (driverSelect.options.length > 0) {
+        driverSelect.selectedIndex = 0;
       }
     } catch (error) {
       console.error("Error fetching drivers:", error);
+      driverSelect.innerHTML = '<option value="">Error loading drivers</option>';
     }
   }
 
   // Async function to fetch constructors for a given season
   async function fetchConstructors(season) {
-    constructorSelect.innerHTML = ""; // clear existing options
+    constructorSelect.innerHTML = ''; // clear existing options
     try {
       const response = await fetch(
         `https://ergast.com/api/f1/${season}/constructors.json`
       );
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
       const data = await response.json();
-      const constructors = data.MRData.ConstructorTable.Constructors;
+      const constructors = data?.MRData?.ConstructorTable?.Constructors;
+
+      if (!constructors || constructors.length === 0) {
+         constructorSelect.innerHTML = '<option value="">No constructors found</option>';
+         return;
+      }
+
       constructors.forEach((constructor) => {
         const option = document.createElement("option");
         option.value = constructor.constructorId;
         option.textContent = constructor.name;
         constructorSelect.appendChild(option);
       });
+
+       if (constructorSelect.options.length > 0) {
+        constructorSelect.selectedIndex = 0;
+      }
     } catch (error) {
       console.error("Error fetching constructors:", error);
+      constructorSelect.innerHTML = '<option value="">Error loading constructors</option>';
     }
   }
 
   // Fetch drivers & constructors for the selected season using the active season carousel item
-function updateDataForSeason() {
-  // Get the active season from the season carousel
-  const activeSeasonBtn = seasonCarousel.querySelector(".carousel-item.active");
-  if (!activeSeasonBtn) {
-    console.error("No season selected in the carousel");
-    return;
+  function updateDataForSeason() {
+    // Get the active season from the season carousel
+    const activeSeasonBtn = seasonCarousel.querySelector(".carousel-item.active");
+    if (!activeSeasonBtn) {
+      console.warn("updateDataForSeason called, but no active season button found yet.");
+      driverSelect.innerHTML = '<option value="">Select Season</option>';
+      constructorSelect.innerHTML = '<option value="">Select Season</option>';
+      return;
+    }
+    const season = activeSeasonBtn.textContent;
+    console.log(`Fetching data for season: ${season}`);
+    fetchDrivers(season);
+    fetchConstructors(season);
+
+    if (f1Chart) {
+        f1Chart.destroy();
+        f1Chart = null;
+    }
   }
-  const season = activeSeasonBtn.textContent;
-  fetchDrivers(season);
-  fetchConstructors(season);
-}
-  
+
 
   // Event listener for submit button
   submitBtn.addEventListener("click", async () => {
@@ -145,23 +187,41 @@ function updateDataForSeason() {
     if (!activeSeasonBtn) return alert("Please select a season.");
     const season = activeSeasonBtn.textContent;
     // Determine selected entity based on championship type
-    const selectedEntity =
+    const selectedEntityId =
       selectedChampType === "drivers"
         ? driverSelect.value
         : constructorSelect.value;
+
+    const selectedOption = selectedChampType === "drivers"
+        ? driverSelect.options[driverSelect.selectedIndex]
+        : constructorSelect.options[constructorSelect.selectedIndex];
+    const selectedEntityName = selectedOption ? selectedOption.textContent : selectedEntityId;
+
+    if (!selectedEntityId) {
+        alert(`Please select a ${selectedChampType === 'drivers' ? 'driver' : 'constructor'}.`);
+        return;
+    }
 
     try {
       // Fetch season data to get all race names
       const seasonResponse = await fetch(
         `https://ergast.com/api/f1/${season}.json`
       );
+      if (!seasonResponse.ok) throw new Error(`Failed to fetch race list for ${season}. Status: ${seasonResponse.status}`);
       const seasonData = await seasonResponse.json();
-      const races = seasonData.MRData.RaceTable.Races;
+      const races = seasonData?.MRData?.RaceTable?.Races;
+
+      if (!races || races.length === 0) {
+          alert(`No race data found for season ${season}.`);
+          return;
+      }
       const raceLabels = races.map((race) => race.raceName);
 
       // For each race, fetch standings to get points for the selected entity
-      const pointsData = await Promise.all(
-        races.map(async (race) => {
+      let cumulativePoints = 0;
+      const pointsData = [];
+
+      for (const race of races) {
           const round = race.round;
           let url;
           if (selectedChampType === "drivers") {
@@ -169,28 +229,40 @@ function updateDataForSeason() {
           } else {
             url = `https://ergast.com/api/f1/${season}/${round}/constructorStandings.json`;
           }
-          const response = await fetch(url);
-          const data = await response.json();
-          const standings = data.MRData.StandingsTable.StandingsLists;
-          if (standings.length > 0) {
-            if (selectedChampType === "drivers") {
-              const driverStandings = standings[0].DriverStandings.find(
-                (ds) => ds.Driver.driverId === selectedEntity
-              );
-              return driverStandings ? parseFloat(driverStandings.points) : 0;
-            } else {
-              const constructorStandings =
-                standings[0].ConstructorStandings.find(
-                  (cs) => cs.Constructor.constructorId === selectedEntity
-                );
-              return constructorStandings
-                ? parseFloat(constructorStandings.points)
-                : 0;
-            }
+          let roundPoints = cumulativePoints;
+
+          try {
+              const response = await fetch(url);
+              if (response.ok) {
+                  const data = await response.json();
+                  const standingsLists = data?.MRData?.StandingsTable?.StandingsLists;
+                  if (standingsLists && standingsLists.length > 0) {
+                      const currentStandings = standingsLists[0];
+                      if (selectedChampType === "drivers") {
+                          const driverStanding = currentStandings.DriverStandings?.find(
+                              (ds) => ds.Driver.driverId === selectedEntityId
+                          );
+                          if (driverStanding) {
+                              roundPoints = parseFloat(driverStanding.points);
+                          }
+                      } else {
+                          const constructorStanding = currentStandings.ConstructorStandings?.find(
+                              (cs) => cs.Constructor.constructorId === selectedEntityId
+                          );
+                          if (constructorStanding) {
+                              roundPoints = parseFloat(constructorStanding.points);
+                          }
+                      }
+                  }
+              } else {
+                 console.warn(`Failed to fetch standings for round ${round}. Status: ${response.status}`);
+              }
+          } catch (fetchError) {
+              console.warn(`Error fetching standings for round ${round}:`, fetchError);
           }
-          return 0;
-        })
-      );
+          cumulativePoints = roundPoints;
+          pointsData.push(cumulativePoints);
+      }
 
       // Render the chart using Chart.js
       if (f1Chart) f1Chart.destroy();
@@ -200,24 +272,34 @@ function updateDataForSeason() {
           labels: raceLabels,
           datasets: [
             {
-              label: `Points for ${selectedEntity} in ${season}`,
+              label: `Cumulative Points for ${selectedEntityName} in ${season}`,
               data: pointsData,
-              borderColor: selectedChampType === "drivers" ? "blue" : "red",
-              fill: false,
+              borderColor: selectedChampType === "drivers" ? "rgb(0, 119, 190)" : "rgb(220, 50, 50)",
+              backgroundColor: selectedChampType === "drivers" ? "rgba(0, 119, 190, 0.1)" : "rgba(220, 50, 50, 0.1)",
+              fill: true,
               tension: 0.1,
             },
           ],
         },
         options: {
           responsive: true,
+          maintainAspectRatio: false,
+           plugins: {
+              title: { display: true, text: `F1 Championship Standings Progression ${season}` },
+              tooltip: { mode: 'index', intersect: false }
+           },
           scales: {
-            y: { beginAtZero: true },
+            y: { beginAtZero: true, title: { display: true, text: 'Cumulative Points'} },
+            x: { title: { display: true, text: 'Race' } }
           },
         },
       });
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching data or rendering chart:", error);
+      alert(`Error updating chart: ${error.message}`);
     }
   });
+
   updateDataForSeason();
-});
+
+}); 
