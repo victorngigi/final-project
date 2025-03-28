@@ -58,9 +58,9 @@ This project is built with vanilla HTML, CSS, and JavaScript and does not requir
 ## Screenshot
 
 screenshot 1
-![screenshot1](images/phase-1-proj-1.png?raw=true)
+![screenshot1](./images/phase-1-proj-1.png?raw=true)
 screenshot 2
-![screenshot2](images/phase-1-proj-2.png?raw=true)
+![screenshot2](./images/phase-1-proj-2.png?raw=true)
 
 ---
 
