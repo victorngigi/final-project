@@ -93,68 +93,69 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Async function to fetch drivers for a given season
   async function fetchDrivers(season) {
-    driverSelect.innerHTML = ''; // clear existing options
-    try {
-      const response = await fetch(
-        `https://ergast.com/api/f1/${season}/drivers.json`
-      );
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-      const data = await response.json();
-      const drivers = data?.MRData?.DriverTable?.Drivers;
+    driverSelect.innerHTML = '<option value="">Loading drivers...</option>'; // Show loading state
+    driverSelect.disabled = true; // Disable during load
 
-      if (!drivers || drivers.length === 0) {
-         driverSelect.innerHTML = '<option value="">No drivers found</option>';
-         return;
-      }
+    const response = await fetch(
+      `https://ergast.com/api/f1/${season}/drivers.json`
+    );
+    const data = await response.json();
+    // Optional chaining remains useful for resilience against unexpected API responses
+    const drivers = data?.MRData?.DriverTable?.Drivers;
 
-      drivers.forEach((driver) => {
-        const option = document.createElement("option");
-        option.value = driver.driverId;
-        option.textContent = `${driver.givenName} ${driver.familyName}`;
-        driverSelect.appendChild(option);
-      });
-      // Default to Hamilton if available in the season
-      if (drivers.some((driver) => driver.driverId === "hamilton")) {
-        driverSelect.value = "hamilton";
-      } else if (driverSelect.options.length > 0) {
-        driverSelect.selectedIndex = 0;
-      }
-    } catch (error) {
-      console.error("Error fetching drivers:", error);
-      driverSelect.innerHTML = '<option value="">Error loading drivers</option>';
+    driverSelect.innerHTML = ""; // Clear loading message
+
+    if (!drivers || drivers.length === 0) {
+       driverSelect.innerHTML = '<option value="">No drivers found</option>';
+       driverSelect.disabled = false;
+       return;
     }
+
+    drivers.forEach((driver) => {
+      const option = document.createElement("option");
+      option.value = driver.driverId;
+      option.textContent = `${driver.givenName} ${driver.familyName}`;
+      driverSelect.appendChild(option);
+    });
+    // Default to Hamilton if available in the season
+    if (drivers.some((driver) => driver.driverId === "hamilton")) {
+      driverSelect.value = "hamilton";
+    } else if (driverSelect.options.length > 0) {
+      driverSelect.selectedIndex = 0;
+    }
+    driverSelect.disabled = false;
   }
 
   // Async function to fetch constructors for a given season
   async function fetchConstructors(season) {
-    constructorSelect.innerHTML = ''; // clear existing options
-    try {
-      const response = await fetch(
-        `https://ergast.com/api/f1/${season}/constructors.json`
-      );
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
-      const data = await response.json();
-      const constructors = data?.MRData?.ConstructorTable?.Constructors;
+    constructorSelect.innerHTML = '<option value="">Loading constructors...</option>'; // Show loading state
+    constructorSelect.disabled = true; // Disable during load
 
-      if (!constructors || constructors.length === 0) {
-         constructorSelect.innerHTML = '<option value="">No constructors found</option>';
-         return;
-      }
+    const response = await fetch(
+      `https://ergast.com/api/f1/${season}/constructors.json`
+    );
+    const data = await response.json();
+    const constructors = data?.MRData?.ConstructorTable?.Constructors;
 
-      constructors.forEach((constructor) => {
-        const option = document.createElement("option");
-        option.value = constructor.constructorId;
-        option.textContent = constructor.name;
-        constructorSelect.appendChild(option);
-      });
+    constructorSelect.innerHTML = ""; // Clear loading message
 
-       if (constructorSelect.options.length > 0) {
-        constructorSelect.selectedIndex = 0;
-      }
-    } catch (error) {
-      console.error("Error fetching constructors:", error);
-      constructorSelect.innerHTML = '<option value="">Error loading constructors</option>';
+    if (!constructors || constructors.length === 0) {
+       constructorSelect.innerHTML = '<option value="">No constructors found</option>';
+       constructorSelect.disabled = false;
+       return;
     }
+
+    constructors.forEach((constructor) => {
+      const option = document.createElement("option");
+      option.value = constructor.constructorId;
+      option.textContent = constructor.name;
+      constructorSelect.appendChild(option);
+    });
+
+     if (constructorSelect.options.length > 0) {
+      constructorSelect.selectedIndex = 0;
+    }
+    constructorSelect.disabled = false;
   }
 
   // Fetch drivers & constructors for the selected season using the active season carousel item
@@ -165,6 +166,8 @@ document.addEventListener("DOMContentLoaded", () => {
       console.warn("updateDataForSeason called, but no active season button found yet.");
       driverSelect.innerHTML = '<option value="">Select Season</option>';
       constructorSelect.innerHTML = '<option value="">Select Season</option>';
+      driverSelect.disabled = true;
+      constructorSelect.disabled = true;
       return;
     }
     const season = activeSeasonBtn.textContent;
@@ -201,6 +204,9 @@ document.addEventListener("DOMContentLoaded", () => {
         alert(`Please select a ${selectedChampType === 'drivers' ? 'driver' : 'constructor'}.`);
         return;
     }
+
+    submitBtn.disabled = true;
+    submitBtn.textContent = 'Loading Chart...';
 
     try {
       // Fetch season data to get all race names
@@ -297,9 +303,12 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch (error) {
       console.error("Error fetching data or rendering chart:", error);
       alert(`Error updating chart: ${error.message}`);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Update Chart';
     }
   });
 
   updateDataForSeason();
 
-}); 
+}); // End DOMContentLoaded
