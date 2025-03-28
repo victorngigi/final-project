@@ -9,6 +9,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const constructorsBtn = document.getElementById("constructorsBtn");
   const submitBtn = document.getElementById("submitBtn");
   const chartCanvas = document.getElementById("f1Chart").getContext("2d");
+  const driverChampWinnerSpan = document.getElementById("driverChampWinner");
+  const constructorChampWinnerSpan = document.getElementById(
+    "constructorChampWinner"
+  );
   let f1Chart = null;
 
   // Default championship type is "drivers"
@@ -45,7 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     const firstYearButton = seasonCarousel.querySelector(".carousel-item");
     if (firstYearButton) {
-        firstYearButton.click();
+      firstYearButton.click();
     }
   });
 
@@ -61,15 +65,25 @@ document.addEventListener("DOMContentLoaded", () => {
   );
 
   const seasonItems = seasonCarousel.getElementsByClassName("carousel-item");
-  if (seasonItems.length > 0 && !seasonCarousel.querySelector(".carousel-item.active")) {
+  if (
+    seasonItems.length > 0 &&
+    !seasonCarousel.querySelector(".carousel-item.active")
+  ) {
     seasonItems[seasonItems.length - 1].classList.add("active");
   }
 
   const defaultDecadeValue = 2020;
-  const defaultDecadeBtn = [...decadeCarousel.querySelectorAll('.carousel-item')].find(btn => btn.textContent === String(defaultDecadeValue));
-  if (defaultDecadeBtn && !decadeCarousel.querySelector('.carousel-item.active')) {
-       [...decadeCarousel.children].forEach(child => child.classList.remove('active'));
-       defaultDecadeBtn.classList.add('active');
+  const defaultDecadeBtn = [
+    ...decadeCarousel.querySelectorAll(".carousel-item"),
+  ].find((btn) => btn.textContent === String(defaultDecadeValue));
+  if (
+    defaultDecadeBtn &&
+    !decadeCarousel.querySelector(".carousel-item.active")
+  ) {
+    [...decadeCarousel.children].forEach((child) =>
+      child.classList.remove("active")
+    );
+    defaultDecadeBtn.classList.add("active");
   }
 
   // Toggle championship type buttons styling and selection
@@ -91,6 +105,76 @@ document.addEventListener("DOMContentLoaded", () => {
   driversBtn.addEventListener("click", () => setChampType("drivers"));
   constructorsBtn.addEventListener("click", () => setChampType("constructors"));
 
+
+
+// Async function to fetch and display the World Drivers' Champion
+async function fetchAndDisplayWDC(season) {
+  driverChampWinnerSpan.textContent = 'Loading Champion...'; // Show loading state
+  try {
+    const response = await fetch(`https://ergast.com/api/f1/${season}/driverStandings/1.json`);
+    if (!response.ok) {
+      // Handle cases like 404 Not Found if season data isn't complete
+      if (response.status === 404) {
+         driverChampWinnerSpan.textContent = 'Champion data not available for this season.';
+      } else {
+         throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return;
+    }
+    const data = await response.json();
+    const standingsLists = data?.MRData?.StandingsTable?.StandingsLists;
+
+    if (standingsLists && standingsLists.length > 0) {
+      const driverStandings = standingsLists[0]?.DriverStandings;
+      if (driverStandings && driverStandings.length > 0) {
+        const champion = driverStandings[0].Driver;
+        driverChampWinnerSpan.innerHTML = `<span class="trophy">🏆</span> Champion: ${champion.givenName} ${champion.familyName}`;
+        return; // Success
+      }
+    }
+    // If data structure is unexpected or empty
+    driverChampWinnerSpan.textContent = 'Champion data unavailable.';
+
+  } catch (error) {
+    console.error("Error fetching WDC:", error);
+    driverChampWinnerSpan.textContent = 'Error loading champion.';
+  }
+}
+
+// Async function to fetch and display the World Constructors' Champion
+async function fetchAndDisplayWCC(season) {
+  constructorChampWinnerSpan.textContent = 'Loading Champion...'; // Show loading state
+  try {
+    const response = await fetch(`https://ergast.com/api/f1/${season}/constructorStandings/1.json`);
+     if (!response.ok) {
+      if (response.status === 404) {
+         // Constructors championship started later, so more likely to be unavailable
+         constructorChampWinnerSpan.textContent = 'Constructors\' Champion data not available for this season.';
+      } else {
+         throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+      return;
+    }
+    const data = await response.json();
+    const standingsLists = data?.MRData?.StandingsTable?.StandingsLists;
+
+    if (standingsLists && standingsLists.length > 0) {
+      const constructorStandings = standingsLists[0]?.ConstructorStandings;
+      if (constructorStandings && constructorStandings.length > 0) {
+        const champion = constructorStandings[0].Constructor;
+        constructorChampWinnerSpan.innerHTML = `<span class="trophy">🏆</span> Champion: ${champion.name}`;
+        return; // Success
+      }
+    }
+    // If data structure is unexpected or empty
+    constructorChampWinnerSpan.textContent = 'Constructors\' Champion data unavailable.';
+
+  } catch (error) {
+    console.error("Error fetching WCC:", error);
+    constructorChampWinnerSpan.textContent = 'Error loading constructors\' champion.';
+  }
+}
+
   // Async function to fetch drivers for a given season
   async function fetchDrivers(season) {
     driverSelect.innerHTML = '<option value="">Loading drivers...</option>'; // Show loading state
@@ -106,9 +190,9 @@ document.addEventListener("DOMContentLoaded", () => {
     driverSelect.innerHTML = ""; // Clear loading message
 
     if (!drivers || drivers.length === 0) {
-       driverSelect.innerHTML = '<option value="">No drivers found</option>';
-       driverSelect.disabled = false;
-       return;
+      driverSelect.innerHTML = '<option value="">No drivers found</option>';
+      driverSelect.disabled = false;
+      return;
     }
 
     drivers.forEach((driver) => {
@@ -128,7 +212,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Async function to fetch constructors for a given season
   async function fetchConstructors(season) {
-    constructorSelect.innerHTML = '<option value="">Loading constructors...</option>'; // Show loading state
+    constructorSelect.innerHTML =
+      '<option value="">Loading constructors...</option>'; // Show loading state
     constructorSelect.disabled = true; // Disable during load
 
     const response = await fetch(
@@ -140,9 +225,10 @@ document.addEventListener("DOMContentLoaded", () => {
     constructorSelect.innerHTML = ""; // Clear loading message
 
     if (!constructors || constructors.length === 0) {
-       constructorSelect.innerHTML = '<option value="">No constructors found</option>';
-       constructorSelect.disabled = false;
-       return;
+      constructorSelect.innerHTML =
+        '<option value="">No constructors found</option>';
+      constructorSelect.disabled = false;
+      return;
     }
 
     constructors.forEach((constructor) => {
@@ -152,7 +238,7 @@ document.addEventListener("DOMContentLoaded", () => {
       constructorSelect.appendChild(option);
     });
 
-     if (constructorSelect.options.length > 0) {
+    if (constructorSelect.options.length > 0) {
       constructorSelect.selectedIndex = 0;
     }
     constructorSelect.disabled = false;
@@ -168,19 +254,25 @@ document.addEventListener("DOMContentLoaded", () => {
       constructorSelect.innerHTML = '<option value="">Select Season</option>';
       driverSelect.disabled = true;
       constructorSelect.disabled = true;
+      // Clear champion spans when no season is selected
+      driverChampWinnerSpan.textContent = '';
+      constructorChampWinnerSpan.textContent = '';
       return;
     }
     const season = activeSeasonBtn.textContent;
     console.log(`Fetching data for season: ${season}`);
+  
+    // Call all fetch operations for the selected season
     fetchDrivers(season);
     fetchConstructors(season);
-
+    fetchAndDisplayWDC(season); // Call new function
+    fetchAndDisplayWCC(season); // Call new function
+  
     if (f1Chart) {
         f1Chart.destroy();
         f1Chart = null;
     }
   }
-
 
   // Event listener for submit button
   submitBtn.addEventListener("click", async () => {
@@ -195,31 +287,41 @@ document.addEventListener("DOMContentLoaded", () => {
         ? driverSelect.value
         : constructorSelect.value;
 
-    const selectedOption = selectedChampType === "drivers"
+    const selectedOption =
+      selectedChampType === "drivers"
         ? driverSelect.options[driverSelect.selectedIndex]
         : constructorSelect.options[constructorSelect.selectedIndex];
-    const selectedEntityName = selectedOption ? selectedOption.textContent : selectedEntityId;
+    const selectedEntityName = selectedOption
+      ? selectedOption.textContent
+      : selectedEntityId;
 
     if (!selectedEntityId) {
-        alert(`Please select a ${selectedChampType === 'drivers' ? 'driver' : 'constructor'}.`);
-        return;
+      alert(
+        `Please select a ${
+          selectedChampType === "drivers" ? "driver" : "constructor"
+        }.`
+      );
+      return;
     }
 
     submitBtn.disabled = true;
-    submitBtn.textContent = 'Loading Chart...';
+    submitBtn.textContent = "Loading Chart...";
 
     try {
       // Fetch season data to get all race names
       const seasonResponse = await fetch(
         `https://ergast.com/api/f1/${season}.json`
       );
-      if (!seasonResponse.ok) throw new Error(`Failed to fetch race list for ${season}. Status: ${seasonResponse.status}`);
+      if (!seasonResponse.ok)
+        throw new Error(
+          `Failed to fetch race list for ${season}. Status: ${seasonResponse.status}`
+        );
       const seasonData = await seasonResponse.json();
       const races = seasonData?.MRData?.RaceTable?.Races;
 
       if (!races || races.length === 0) {
-          alert(`No race data found for season ${season}.`);
-          return;
+        alert(`No race data found for season ${season}.`);
+        return;
       }
       const raceLabels = races.map((race) => race.raceName);
 
@@ -228,46 +330,52 @@ document.addEventListener("DOMContentLoaded", () => {
       const pointsData = [];
 
       for (const race of races) {
-          const round = race.round;
-          let url;
-          if (selectedChampType === "drivers") {
-            url = `https://ergast.com/api/f1/${season}/${round}/driverStandings.json`;
-          } else {
-            url = `https://ergast.com/api/f1/${season}/${round}/constructorStandings.json`;
-          }
-          let roundPoints = cumulativePoints;
+        const round = race.round;
+        let url;
+        if (selectedChampType === "drivers") {
+          url = `https://ergast.com/api/f1/${season}/${round}/driverStandings.json`;
+        } else {
+          url = `https://ergast.com/api/f1/${season}/${round}/constructorStandings.json`;
+        }
+        let roundPoints = cumulativePoints;
 
-          try {
-              const response = await fetch(url);
-              if (response.ok) {
-                  const data = await response.json();
-                  const standingsLists = data?.MRData?.StandingsTable?.StandingsLists;
-                  if (standingsLists && standingsLists.length > 0) {
-                      const currentStandings = standingsLists[0];
-                      if (selectedChampType === "drivers") {
-                          const driverStanding = currentStandings.DriverStandings?.find(
-                              (ds) => ds.Driver.driverId === selectedEntityId
-                          );
-                          if (driverStanding) {
-                              roundPoints = parseFloat(driverStanding.points);
-                          }
-                      } else {
-                          const constructorStanding = currentStandings.ConstructorStandings?.find(
-                              (cs) => cs.Constructor.constructorId === selectedEntityId
-                          );
-                          if (constructorStanding) {
-                              roundPoints = parseFloat(constructorStanding.points);
-                          }
-                      }
-                  }
+        try {
+          const response = await fetch(url);
+          if (response.ok) {
+            const data = await response.json();
+            const standingsLists = data?.MRData?.StandingsTable?.StandingsLists;
+            if (standingsLists && standingsLists.length > 0) {
+              const currentStandings = standingsLists[0];
+              if (selectedChampType === "drivers") {
+                const driverStanding = currentStandings.DriverStandings?.find(
+                  (ds) => ds.Driver.driverId === selectedEntityId
+                );
+                if (driverStanding) {
+                  roundPoints = parseFloat(driverStanding.points);
+                }
               } else {
-                 console.warn(`Failed to fetch standings for round ${round}. Status: ${response.status}`);
+                const constructorStanding =
+                  currentStandings.ConstructorStandings?.find(
+                    (cs) => cs.Constructor.constructorId === selectedEntityId
+                  );
+                if (constructorStanding) {
+                  roundPoints = parseFloat(constructorStanding.points);
+                }
               }
-          } catch (fetchError) {
-              console.warn(`Error fetching standings for round ${round}:`, fetchError);
+            }
+          } else {
+            console.warn(
+              `Failed to fetch standings for round ${round}. Status: ${response.status}`
+            );
           }
-          cumulativePoints = roundPoints;
-          pointsData.push(cumulativePoints);
+        } catch (fetchError) {
+          console.warn(
+            `Error fetching standings for round ${round}:`,
+            fetchError
+          );
+        }
+        cumulativePoints = roundPoints;
+        pointsData.push(cumulativePoints);
       }
 
       // Render the chart using Chart.js
@@ -280,8 +388,14 @@ document.addEventListener("DOMContentLoaded", () => {
             {
               label: `Cumulative Points for ${selectedEntityName} in ${season}`,
               data: pointsData,
-              borderColor: selectedChampType === "drivers" ? "rgb(0, 119, 190)" : "rgb(220, 50, 50)",
-              backgroundColor: selectedChampType === "drivers" ? "rgba(0, 119, 190, 0.1)" : "rgba(220, 50, 50, 0.1)",
+              borderColor:
+                selectedChampType === "drivers"
+                  ? "rgb(0, 119, 190)"
+                  : "rgb(220, 50, 50)",
+              backgroundColor:
+                selectedChampType === "drivers"
+                  ? "rgba(0, 119, 190, 0.1)"
+                  : "rgba(220, 50, 50, 0.1)",
               fill: true,
               tension: 0.1,
             },
@@ -290,13 +404,19 @@ document.addEventListener("DOMContentLoaded", () => {
         options: {
           responsive: true,
           maintainAspectRatio: false,
-           plugins: {
-              title: { display: true, text: `F1 Championship Standings Progression ${season}` },
-              tooltip: { mode: 'index', intersect: false }
-           },
+          plugins: {
+            title: {
+              display: true,
+              text: `F1 Championship Standings Progression ${season}`,
+            },
+            tooltip: { mode: "index", intersect: false },
+          },
           scales: {
-            y: { beginAtZero: true, title: { display: true, text: 'Cumulative Points'} },
-            x: { title: { display: true, text: 'Race' } }
+            y: {
+              beginAtZero: true,
+              title: { display: true, text: "Cumulative Points" },
+            },
+            x: { title: { display: true, text: "Race" } },
           },
         },
       });
@@ -304,11 +424,10 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error fetching data or rendering chart:", error);
       alert(`Error updating chart: ${error.message}`);
     } finally {
-        submitBtn.disabled = false;
-        submitBtn.textContent = 'Update Chart';
+      submitBtn.disabled = false;
+      submitBtn.textContent = "Update Chart";
     }
   });
 
   updateDataForSeason();
-
 }); // End DOMContentLoaded
