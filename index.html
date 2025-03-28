@@ -1,40 +1,57 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>F1 Historical Data</title>
-  <link rel="stylesheet" href="style.css">
-</head>
-<body>
-  <div class="container">
-    <div class="header">
-      <img src="./images/f1logo.png" alt="F1 Logo">
-      <h1>Historical Data</h1>
+  <head>
+    <meta charset="UTF-8" />
+    <title>F1 Historical Data</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <img src="./images/f1logo.png" alt="F1 Logo" />
+        <h1>Historical Data</h1>
+      </div>
+      <div class="carousel-container">
+        <button class="scroll-btn" onclick="scrollLeft('decadeCarousel')">
+          ◀
+        </button>
+        <div id="decadeCarousel" class="carousel"></div>
+        <button class="scroll-btn" onclick="scrollRight('decadeCarousel')">
+          ▶
+        </button>
+      </div>
+      <div class="carousel-container">
+        <button class="scroll-btn" onclick="scrollLeft('seasonCarousel')">
+          ◀
+        </button>
+        <div id="seasonCarousel" class="carousel"></div>
+        <button class="scroll-btn" onclick="scrollRight('seasonCarousel')">
+          ▶
+        </button>
+      </div>
+      <div class="form-container">
+        <div class="field-group" id="championToggle">
+          <button id="driversBtn" class="champ-btn active">Drivers</button>
+          <button id="constructorsBtn" class="champ-btn">Constructors</button>
+        </div>
+        <div class="field-group" id="driversSection">
+          <label for="driverSelect">Select Driver:</label>
+          <select id="driverSelect"></select>
+        </div>
+        <div class="field-group" id="constructorsSection" style="display: none">
+          <label for="constructorSelect">Select Constructor:</label>
+          <select id="constructorSelect"></select>
+        </div>
+        <div class="field-group">
+          <button id="submitBtn">Submit</button>
+        </div>
+        <div class="chart-container">
+          <canvas id="f1Chart"></canvas>
+        </div>
+      </div>
     </div>
-    <div class="form-container">
-      <div class="field-group">
-        <label for="seasonSelect">Select Season:</label>
-        <select id="seasonSelect"></select>
-      </div>
-      <div class="field-group" id="championToggle">
-        <button id="driversBtn" class="champ-btn active">Drivers</button>
-        <button id="constructorsBtn" class="champ-btn">Constructors</button>
-      </div>
-      <div class="field-group" id="driversSection">
-        <label for="driverSelect">Select Driver:</label>
-        <select id="driverSelect"></select>
-      </div>
-      <div class="field-group" id="constructorsSection" style="display: none;">
-        <label for="constructorSelect">Select Constructor:</label>
-        <select id="constructorSelect"></select>
-      </div>
-      <div class="field-group">
-        <button id="submitBtn">Submit</button>
-      </div>
-    </div class="chart-container">
-    <canvas id="f1Chart"></canvas>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script src="script.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="script.js"></script>
+  </body>
 </html>

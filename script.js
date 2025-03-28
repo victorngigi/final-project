@@ -1,5 +1,6 @@
 document.addEventListener("DOMContentLoaded", () => {
-  const seasonSelect = document.getElementById("seasonSelect");
+  const decadeCarousel = document.getElementById("decadeCarousel");
+  const seasonCarousel = document.getElementById("seasonCarousel");
   const driverSelect = document.getElementById("driverSelect");
   const constructorSelect = document.getElementById("constructorSelect");
   const driversSection = document.getElementById("driversSection");
@@ -9,21 +10,56 @@ document.addEventListener("DOMContentLoaded", () => {
   const submitBtn = document.getElementById("submitBtn");
   const chartCanvas = document.getElementById("f1Chart").getContext("2d");
   let f1Chart = null;
-  
+
   // Default championship type is "drivers"
   let selectedChampType = "drivers";
 
-  // Populate season dropdown (from 1990 to 2024)
-  const startYear = 1950;
-  const endYear = 2024;
-  for (let year = startYear; year <= endYear; year++) {
-    const option = document.createElement("option");
-    option.value = year;
-    option.textContent = year;
-    seasonSelect.appendChild(option);
+  // Create decade carousel and fetch seasons for the selected decade
+  function createCarousel(container, items, onClick) {
+    container.innerHTML = ""; // Clear container
+    items.forEach((item) => {
+      const button = document.createElement("button");
+      button.textContent = item;
+      button.classList.add("carousel-item");
+      // Add click event to mark item as active and trigger callback
+      button.addEventListener("click", () => {
+        // Remove 'active' class from all carousel items in the container
+        [...container.children].forEach((child) =>
+          child.classList.remove("active")
+        );
+        button.classList.add("active"); // Mark this item as active
+        onClick(item); // Execute callback with selected item
+      });
+      container.appendChild(button);
+    });
   }
-  seasonSelect.value = endYear; // default to latest season available
+  // Populate decade carousel (from 1950 to 2020; latest decade for 2024)
+  const decades = Array.from({ length: 8 }, (_, i) => 1950 + i * 10);
+  createCarousel(decadeCarousel, decades, (decade) => {
+    // When a decade is selected, populate season carousel with years of that decade (filtering to <=2024)
+    const years = Array.from({ length: 10 }, (_, i) => decade + i).filter(
+      (year) => year <= 2024
+    );
+    createCarousel(seasonCarousel, years, (year) => {
+      updateDataForSeason(); 
+    });
+  });
+  // Auto-select latest decade and season by default:
+  createCarousel(
+    seasonCarousel,
+    Array.from({ length: 10 }, (_, i) => 2020 + i).filter(
+      (year) => year <= 2024
+    ),
+    (year) => {
+      updateDataForSeason();
+    }
+  );
 
+  const seasonItems = seasonCarousel.getElementsByClassName("carousel-item");
+  if (seasonItems.length > 0 && !seasonCarousel.querySelector(".carousel-item.active")) {
+    seasonItems[seasonItems.length - 1].classList.add("active");
+  }
+  
   // Toggle championship type buttons styling and selection
   function setChampType(type) {
     selectedChampType = type;
@@ -47,7 +83,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchDrivers(season) {
     driverSelect.innerHTML = ""; // clear existing options
     try {
-      const response = await fetch(`https://ergast.com/api/f1/${season}/drivers.json`);
+      const response = await fetch(
+        `https://ergast.com/api/f1/${season}/drivers.json`
+      );
       const data = await response.json();
       const drivers = data.MRData.DriverTable.Drivers;
       drivers.forEach((driver) => {
@@ -57,7 +95,7 @@ document.addEventListener("DOMContentLoaded", () => {
         driverSelect.appendChild(option);
       });
       // Default to Hamilton if available in the season
-      if (drivers.some(driver => driver.driverId === "hamilton")) {
+      if (drivers.some((driver) => driver.driverId === "hamilton")) {
         driverSelect.value = "hamilton";
       }
     } catch (error) {
@@ -69,7 +107,9 @@ document.addEventListener("DOMContentLoaded", () => {
   async function fetchConstructors(season) {
     constructorSelect.innerHTML = ""; // clear existing options
     try {
-      const response = await fetch(`https://ergast.com/api/f1/${season}/constructors.json`);
+      const response = await fetch(
+        `https://ergast.com/api/f1/${season}/constructors.json`
+      );
       const data = await response.json();
       const constructors = data.MRData.ConstructorTable.Constructors;
       constructors.forEach((constructor) => {
@@ -83,25 +123,38 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Fetch drivers & constructors for the selected season
-  function updateDataForSeason() {
-    fetchDrivers(seasonSelect.value);
-    fetchConstructors(seasonSelect.value);
+  // Fetch drivers & constructors for the selected season using the active season carousel item
+function updateDataForSeason() {
+  // Get the active season from the season carousel
+  const activeSeasonBtn = seasonCarousel.querySelector(".carousel-item.active");
+  if (!activeSeasonBtn) {
+    console.error("No season selected in the carousel");
+    return;
   }
-  seasonSelect.addEventListener("change", updateDataForSeason);
-  updateDataForSeason();
+  const season = activeSeasonBtn.textContent;
+  fetchDrivers(season);
+  fetchConstructors(season);
+}
+  
 
   // Event listener for submit button
   submitBtn.addEventListener("click", async () => {
-    const season = seasonSelect.value;
+    const activeSeasonBtn = seasonCarousel.querySelector(
+      ".carousel-item.active"
+    );
+    if (!activeSeasonBtn) return alert("Please select a season.");
+    const season = activeSeasonBtn.textContent;
     // Determine selected entity based on championship type
-    const selectedEntity = selectedChampType === "drivers" 
-                             ? driverSelect.value 
-                             : constructorSelect.value;
-    
+    const selectedEntity =
+      selectedChampType === "drivers"
+        ? driverSelect.value
+        : constructorSelect.value;
+
     try {
       // Fetch season data to get all race names
-      const seasonResponse = await fetch(`https://ergast.com/api/f1/${season}.json`);
+      const seasonResponse = await fetch(
+        `https://ergast.com/api/f1/${season}.json`
+      );
       const seasonData = await seasonResponse.json();
       const races = seasonData.MRData.RaceTable.Races;
       const raceLabels = races.map((race) => race.raceName);
@@ -126,10 +179,13 @@ document.addEventListener("DOMContentLoaded", () => {
               );
               return driverStandings ? parseFloat(driverStandings.points) : 0;
             } else {
-              const constructorStandings = standings[0].ConstructorStandings.find(
-                (cs) => cs.Constructor.constructorId === selectedEntity
-              );
-              return constructorStandings ? parseFloat(constructorStandings.points) : 0;
+              const constructorStandings =
+                standings[0].ConstructorStandings.find(
+                  (cs) => cs.Constructor.constructorId === selectedEntity
+                );
+              return constructorStandings
+                ? parseFloat(constructorStandings.points)
+                : 0;
             }
           }
           return 0;
@@ -142,13 +198,15 @@ document.addEventListener("DOMContentLoaded", () => {
         type: "line",
         data: {
           labels: raceLabels,
-          datasets: [{
-            label: `Points for ${selectedEntity} in ${season}`,
-            data: pointsData,
-            borderColor: selectedChampType === "drivers" ? "blue" : "red",
-            fill: false,
-            tension: 0.1,
-          }],
+          datasets: [
+            {
+              label: `Points for ${selectedEntity} in ${season}`,
+              data: pointsData,
+              borderColor: selectedChampType === "drivers" ? "blue" : "red",
+              fill: false,
+              tension: 0.1,
+            },
+          ],
         },
         options: {
           responsive: true,
@@ -161,4 +219,5 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error fetching data:", error);
     }
   });
+  updateDataForSeason();
 });

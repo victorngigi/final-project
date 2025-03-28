@@ -42,6 +42,49 @@ body {
   color: #E10600;
 }
 
+.carousel-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.scroll-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 10px;
+  color: #E10600;
+}
+
+.carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  padding: 10px;
+  scrollbar-width: none;
+}
+
+.carousel::-webkit-scrollbar {
+  display: none; 
+}
+
+.carousel-item {
+  padding: 10px 20px;
+  background-color: #444;
+  border-radius: 8px;
+  cursor: pointer;
+  min-width: 80px;
+  transition: background 0.3s;
+}
+
+.carousel-item.active {
+  background-color: #E10600;
+  color: #fff;
+}
+
+
 .form-container {
   background-color: #222222;
   padding: 20px;
