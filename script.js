@@ -181,7 +181,7 @@ async function fetchAndDisplayWCC(season) {
     driverSelect.disabled = true; // Disable during load
 
     const response = await fetch(
-      `https://ergast.com/api/f1/${season}/drivers.json`
+      `https://ergast.com/api/f1/${season}/drivers.json?limit=100`
     );
     const data = await response.json();
     // Optional chaining remains useful for resilience against unexpected API responses
@@ -217,7 +217,7 @@ async function fetchAndDisplayWCC(season) {
     constructorSelect.disabled = true; // Disable during load
 
     const response = await fetch(
-      `https://ergast.com/api/f1/${season}/constructors.json`
+      `https://ergast.com/api/f1/${season}/constructors.json?limit=100`
     );
     const data = await response.json();
     const constructors = data?.MRData?.ConstructorTable?.Constructors;
